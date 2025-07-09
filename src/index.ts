@@ -9,6 +9,7 @@ export {checkStatus} from './credential/verify'
 // Types
 export type {
     StatusMessage,
+    BitstringStatusPurpose,
     BitstringStatusListEntry,
     BitstringStatusListCredentialSubject,
     BitstringStatusListCredentialUnsigned,

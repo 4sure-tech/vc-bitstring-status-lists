@@ -3,26 +3,26 @@
  */
 
 import {StatusList} from '../status-list/StatusList'
-import {BitstringStatusListCredentialSubject, BitstringStatusListCredentialUnsigned, IIssuer, StatusMessage} from '../types'
+import {BitstringStatusListCredentialSubject, BitstringStatusListCredentialUnsigned, IIssuer} from '../types'
 
 export async function createStatusListCredential(options: {
-    list: StatusList
     id: string
     issuer: string | IIssuer
-    validFrom?: string
-    validUntil?: string
+    statusSize?: number
     statusPurpose: string | string[]
-    statusMessage?: StatusMessage[]
+    validFrom?: Date
+    validUntil?: Date
     ttl?: number
 }): Promise<BitstringStatusListCredentialUnsigned> {
-    const {list, id, issuer, validFrom, validUntil, statusPurpose, ttl} = options
+    const { id, issuer, statusSize ,validFrom, validUntil, statusPurpose, ttl} = options
 
-    const encodedList = await list.encode()
+    const encodedList = await new StatusList({statusSize}).encode()
 
     const credentialSubject = {
         id: `${id}#list`,
         type: 'BitstringStatusList',
         statusPurpose,
+        statusSize: statusSize ?? 1,
         encodedList,
         ...(ttl && {ttl})
     } satisfies BitstringStatusListCredentialSubject
@@ -36,7 +36,7 @@ export async function createStatusListCredential(options: {
         type: ['VerifiableCredential', 'BitstringStatusListCredential'],
         issuer,
         credentialSubject,
-        ...(validFrom && {validFrom}),
-        ...(validUntil && {validUntil})
+        ...(validFrom && {validFrom: validFrom.toISOString()}),
+        ...(validUntil && {validUntil: validUntil.toISOString()})
     }
 }

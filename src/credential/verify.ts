@@ -42,9 +42,6 @@ export async function checkStatus(options: CheckStatusOptions): Promise<Verifica
         const listStatusPurpose = listCredential.credentialSubject.statusPurpose
         const purposes = Array.isArray(listStatusPurpose) ? listStatusPurpose : [listStatusPurpose]
 
-        console.log('Entry statusPurpose:', entry.statusPurpose)
-        console.log('List statusPurpose:', purposes)
-
         if (!purposes.includes(entry.statusPurpose)) {
             throw new Error(`Status purpose '${entry.statusPurpose}' does not match any purpose in status list credential: ${purposes.join(', ')}`)
         }

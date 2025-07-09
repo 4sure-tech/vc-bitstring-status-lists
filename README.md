@@ -150,7 +150,7 @@ A single status list can serve multiple purposes:
 
 ```typescript
 const statusListCredential = await createStatusListCredential({
-  list: statusList,
+  statusList: statusList,
   id: 'https://example.com/status-lists/1',
   issuer: 'https://example.com/issuer',
   statusPurpose: ['revocation', 'suspension'] // Multiple purposes

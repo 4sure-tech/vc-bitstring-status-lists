@@ -2,11 +2,7 @@
  * Central type definitions for the Bitstring Status List library
  * Based on W3C Bitstring Status List v1.0 specification
  */
-
-export interface StatusMessage {
-    id: string // The hex status code (e.g., "0x0", "0x1")
-    message: string // The human-readable description of the status
-}
+export type BitstringStatusPurpose = 'revocation' | 'suspension' | 'refresh' | 'message' | string
 
 export interface BitstringStatusListEntry {
     id?: string // Optional identifier for the status list entry
@@ -23,6 +19,7 @@ export interface BitstringStatusListCredentialSubject {
     id: string // The ID of the credential subject
     type: 'BitstringStatusList'
     statusPurpose: 'revocation' | 'suspension' | 'message' | string | string[] // Can be array for multiple purposes
+    statusSize: number // The statusSize indicates the size of the status entry in bits
     encodedList: string // The u-prefixed, compressed, base64url-encoded string
     ttl?: number // Optional time to live in milliseconds
 }
@@ -72,4 +69,9 @@ export interface VerificationResult {
     status: number // The numeric status code found
     statusMessage?: StatusMessage // The corresponding message object if found
     error?: Error
+}
+
+export interface StatusMessage {
+    id: string // The hex status code (e.g., "0x0", "0x1")
+    message: string // The human-readable description of the status
 }

@@ -1,5 +1,7 @@
 import {assertIsNonNegativeInteger, assertIsPositiveInteger} from "../utils/assertions";
 
+const EXPAND_BLOCK_SIZE = 16384 // 16KB
+
 interface BitEntry {
     credentialIndex: number
     statusSize: number
@@ -11,15 +13,14 @@ export class BitManager {
     private bits: Uint8Array
     private nextBitPosition: number = 0
 
-    constructor(options: { buffer?: Uint8Array; initialSize?: number }) {
+    constructor(options: { buffer?: Uint8Array; initialSize?: number } = {}) {
         if (options.buffer) {
             this.bits = new Uint8Array(options.buffer)
         } else {
-            // Start with reasonable size, expand as needed
-            this.bits = new Uint8Array(options.initialSize || 1024)
+            // Default to W3C minimum size (16KB)
+            this.bits = new Uint8Array(options.initialSize || 16384)
         }
     }
-
     addEntry(credentialIndex: number, statusSize: number = 1): void {
         assertIsNonNegativeInteger(credentialIndex, 'credentialIndex')
         assertIsPositiveInteger(statusSize, 'statusSize')
@@ -94,13 +95,15 @@ export class BitManager {
     private ensureBufferSize(): void {
         const requiredBytes = Math.ceil(this.nextBitPosition / 8)
         if (requiredBytes > this.bits.length) {
-            const newSize = Math.max(requiredBytes, this.bits.length * 2)
+            // Expand in 16KB blocks to maintain W3C compliance and efficiency
+            const blocksNeeded = Math.ceil(requiredBytes / EXPAND_BLOCK_SIZE)
+            const newSize = blocksNeeded * EXPAND_BLOCK_SIZE
+
             const newBuffer = new Uint8Array(newSize)
             newBuffer.set(this.bits)
             this.bits = newBuffer
         }
     }
-
     toBuffer(): Uint8Array {
         const requiredBytes = Math.ceil(this.nextBitPosition / 8)
         return this.bits.slice(0, requiredBytes)
