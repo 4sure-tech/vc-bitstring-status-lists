@@ -1,6 +1,6 @@
 // Core Classes
 export {BitManager} from './bit-manager/BitManager'
-export {StatusList} from './status-list/StatusList'
+export {BitstreamStatusList} from './status-list/BitstreamStatusList'
 
 // High-Level Functions
 export {createStatusListCredential} from './credential/create'

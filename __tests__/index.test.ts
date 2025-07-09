@@ -8,8 +8,8 @@ describe('index exports', () => {
     })
 
     it('should export StatusList', () => {
-        expect(index.StatusList).toBeDefined()
-        expect(typeof index.StatusList).toBe('function')
+        expect(index.BitstreamStatusList).toBeDefined()
+        expect(typeof index.BitstreamStatusList).toBe('function')
     })
 
     it('should export createStatusListCredential', () => {
@@ -25,7 +25,7 @@ describe('index exports', () => {
     it('should have all expected exports', () => {
         const expectedExports = [
             'BitManager',
-            'StatusList',
+            'BitstreamStatusList',
             'createStatusListCredential',
             'checkStatus'
         ]

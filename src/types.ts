@@ -19,7 +19,6 @@ export interface BitstringStatusListCredentialSubject {
     id: string // The ID of the credential subject
     type: 'BitstringStatusList'
     statusPurpose: 'revocation' | 'suspension' | 'message' | string | string[] // Can be array for multiple purposes
-    statusSize: number // The statusSize indicates the size of the status entry in bits
     encodedList: string // The u-prefixed, compressed, base64url-encoded string
     ttl?: number // Optional time to live in milliseconds
 }
