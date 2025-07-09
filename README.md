@@ -46,16 +46,7 @@ statusList.setStatus(0, 0) // Valid
 statusList.setStatus(1, 1) // Revoked
 statusList.setStatus(2, 0) // Valid
 ```
-<div style="display: flex; align-items: center; background-color: rgb(233, 242, 254); padding: 12px 16px; border-radius: 6px; font-family: sans-serif; font-size: 14px;">
-  <div style="margin-right: 12px; color: #1a73e8;">
-    <svg xmlns="http://www.w3.org/2000/svg" height="20" width="20" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-6h2v6zm0-8h-2V7h2v4z"/>
-    </svg>
-  </div>
-  <div style="color: rgb(41, 42, 46)">
-    All new entries have status 0 - Valid by default
-  </div>
-</div>
+> ℹ️ - All new entries have status `0` – Valid by default
 
 
 ### 2. Publishing the Status List
