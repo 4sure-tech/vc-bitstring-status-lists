@@ -15,7 +15,7 @@ export async function createStatusListCredential(options: {
     statusMessage?: StatusMessage[]
     ttl?: number
 }): Promise<BitstringStatusListCredentialUnsigned> {
-    const {list, id, issuer, validFrom, validUntil, statusPurpose, statusMessage, ttl} = options
+    const {list, id, issuer, validFrom, validUntil, statusPurpose, ttl} = options
 
     const encodedList = await list.encode()
 
@@ -24,7 +24,6 @@ export async function createStatusListCredential(options: {
         type: 'BitstringStatusList',
         statusPurpose,
         encodedList,
-        ...(statusMessage && {statusMessage}),
         ...(ttl && {ttl})
     } satisfies BitstringStatusListCredentialSubject
 

@@ -231,7 +231,6 @@ function createStatusListCredential(options: {
   validFrom?: string
   validUntil?: string
   statusPurpose: string | string[]
-  statusMessage?: StatusMessage[]
   ttl?: number
 }): Promise<BitstringStatusListCredentialUnsigned>
 ```
