@@ -1,0 +1,56 @@
+{
+  "name": "vc-bitstring-status-lists",
+  "version": "0.1.0",
+  "description": "TypeScript library for W3C Bitstring Status List v1.0 specification - privacy-preserving credential status management",
+  "source": "src/index.ts",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    "import": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "require": {
+      "types": "./dist/index.d.cts",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "scripts": {
+    "build": "tsup"
+  },
+  "keywords": [
+    "verifiable-credentials",
+    "bitstring",
+    "status-list",
+    "w3c",
+    "revocation",
+    "suspension",
+    "typescript"
+  ],
+  "author": "",
+  "license": "Apache-2.0",
+  "packageManager": "pnpm@10.13.1",
+  "files": [
+    "dist",
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "dependencies": {
+    "base64url-universal": "^2.0.0",
+    "pako": "^2.1.0",
+    "uint8arrays": "^5.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.12",
+    "@types/pako": "^2.0.3",
+    "tsup": "^8.5.0",
+    "turbo": "^2.5.4",
+    "typescript": "^5.8.3",
+    "vite": "^7.0.3",
+    "vite-tsconfig-paths": "^5.1.4",
+    "vitest": "^3.2.4"
+  }
+}
