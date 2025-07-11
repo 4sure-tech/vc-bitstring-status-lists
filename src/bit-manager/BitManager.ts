@@ -43,7 +43,7 @@ export class BitManager {
 
         assertIsPositiveInteger(statusSize, 'statusSize')
 
-        // Guard against JavaScript bitwise operation overflow
+        // Guard against JavaScript bitwise operation overflow (which is insane for this use case, but it's the real limit.)
         if (statusSize > 30) {
             throw new StatusRangeError(`statusSize ${statusSize} exceeds maximum supported value of 30 bits`)
         }
