@@ -7,7 +7,6 @@
 
 import {BitstreamStatusList} from '../status-list/BitstreamStatusList'
 import {BitstringStatusListCredentialSubject, BitstringStatusListCredentialUnsigned, IIssuer} from '../types'
-import * as console from "node:console";
 
 /**
  * Creates a W3C compliant BitstringStatusListCredential with an empty status list
