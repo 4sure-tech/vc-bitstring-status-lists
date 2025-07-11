@@ -21,7 +21,7 @@ This library provides a complete implementation of the W3C specification with th
 ## Installation
 
 ```bash
-pnpm install vc-bitstring-status-lists # or npm / yarn
+pnpm install @4sure-tech/vc-bitstring-status-lists # or npm / yarn
 ```
 
 ## Quick Start
