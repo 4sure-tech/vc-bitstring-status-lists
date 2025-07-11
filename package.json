@@ -31,18 +31,32 @@
     "typescript"
   ],
   "author": "4Sure Technology Solutions",
+  "contributors": [
+    {
+      "name": "Sander Postma",
+      "email": "info@4sure.tech",
+      "url": "https://github.com/sanderPostma"
+    }
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/4sure-tech/vc-bitstring-status-lists.git"
   },
+  "bugs": {
+    "url": "https://github.com/4sure-tech/vc-bitstring-status-lists/issues"
+  },
   "homepage": "https://4sure.tech",
   "license": "Apache-2.0",
   "packageManager": "pnpm@10.13.1",
+  "engines": {
+    "node": ">=18"
+  },
   "files": [
     "dist",
     "README.md",
     "LICENSE"
   ],
+  "sideEffects": false,
   "dependencies": {
     "base64url-universal": "^2.0.0",
     "pako": "^2.1.0",
