@@ -7,7 +7,6 @@
 
 import {BitstreamStatusList} from '../status-list/BitstreamStatusList'
 import {BitstringStatusListCredentialSubject, BitstringStatusListCredentialUnsigned, IIssuer} from '../types'
-import * as console from "node:console";
 
 /**
  * Creates a W3C compliant BitstringStatusListCredential with an empty status list
@@ -77,7 +76,7 @@ export async function createStatusListCredential(options: {
         encodedList,
         ...(ttl && {ttl})
     }
-console.log('credentialSubject', JSON.stringify(credentialSubject))
+
     // Build the complete credential with W3C contexts
     const credential: BitstringStatusListCredentialUnsigned = {
         '@context': [

@@ -27,9 +27,11 @@ import {BitManager} from '../bit-manager/BitManager'
 import {base64urlToBytes, bytesToBase64url} from '../utils/base64'
 import {assertIsPositiveInteger, assertIsString} from '../utils/assertions'
 import pako from 'pako'
+import {MalformedValueError, StatusListLengthError} from "./errors";
 
 /** W3C specification minimum bitstring size */
 const MIN_BITSTRING_SIZE_BYTES = 16384 // 16KB (131,072 bits)
+const MIN_BITSTRING_SIZE_BITS = 131072
 
 export class BitstreamStatusList {
     private readonly bitManager: BitManager
@@ -106,7 +108,8 @@ export class BitstreamStatusList {
      * @param options.encodedList - u-prefixed, gzip-compressed base64url string
      * @param options.statusSize - Uniform bit width used during encoding (default: 1)
      * @returns Promise resolving to new StatusList instance
-     * @throws {TypeError} If format is invalid or size requirements not met
+     * @throws {MalformedValueError} If format is invalid
+     * @throws {StatusListLengthError} If size requirements not met
      */
     static async decode(options: {
         encodedList: string
@@ -117,18 +120,44 @@ export class BitstreamStatusList {
         assertIsString(encodedList, 'encodedList')
         assertIsPositiveInteger(statusSize, 'statusSize')
 
+        // Validate multibase prefix
         if (!encodedList.startsWith('u')) {
-            throw new TypeError('encodedList must start with "u" prefix')
+            throw new MalformedValueError('encodedList must start with lowercase "u" prefix')
         }
 
-        // Decode multibase and decompress
-        const compressed = base64urlToBytes(encodedList.slice(1))
-        const buffer = pako.ungzip(compressed)
+        // Validate base64url alphabet and no padding
+        const base64urlPart = encodedList.slice(1)
+        if (!/^[A-Za-z0-9_-]+$/.test(base64urlPart)) {
+            throw new MalformedValueError('encodedList contains invalid base64url characters or padding')
+        }
+
+        let compressed: Uint8Array
+        let buffer: Uint8Array
+
+        try {
+            // Decode multibase
+            compressed = base64urlToBytes(base64urlPart)
+            // Decompress
+            buffer = pako.ungzip(compressed)
+        } catch (error) {
+            throw new MalformedValueError(`Failed to decode or decompress encodedList: ${error.message}`)
+        }
 
         // Enforce W3C minimum size requirement
         if (buffer.length < MIN_BITSTRING_SIZE_BYTES) {
-            throw new TypeError(
+            throw new StatusListLengthError(
                 `Status list must be at least ${MIN_BITSTRING_SIZE_BYTES} bytes (16KB), got ${buffer.length}`
+            )
+        }
+
+        // W3C spec step 9: validate minimum entries based on statusSize
+        const totalBits = buffer.length * 8
+        const availableEntries = Math.floor(totalBits / statusSize)
+        const minimumEntries = Math.floor(MIN_BITSTRING_SIZE_BITS / statusSize)
+
+        if (availableEntries < minimumEntries) {
+            throw new StatusListLengthError(
+                `Status list must support at least ${minimumEntries} entries for statusSize ${statusSize}, got ${availableEntries}`
             )
         }
 
@@ -152,20 +181,32 @@ export class BitstreamStatusList {
      * @param encodedList - u-prefixed, gzip-compressed base64url string
      * @param statusSize - Uniform bit width used during encoding
      * @returns Maximum number of entries (uncompressed_bits / statusSize)
-     * @throws {TypeError} If format is invalid
+     * @throws {MalformedValueError} If format is invalid
      */
     static getStatusListLength(encodedList: string, statusSize: number): number {
         assertIsString(encodedList, 'encodedList')
         assertIsPositiveInteger(statusSize, 'statusSize')
 
+        // Validate multibase prefix
         if (!encodedList.startsWith('u')) {
-            throw new TypeError('encodedList must start with "u" prefix')
+            throw new MalformedValueError('encodedList must start with lowercase "u" prefix')
         }
 
-        const compressed = base64urlToBytes(encodedList.slice(1))
+        // Validate base64url alphabet and no padding
+        const base64urlPart = encodedList.slice(1)
+        if (!/^[A-Za-z0-9_-]+$/.test(base64urlPart)) {
+            throw new MalformedValueError('encodedList contains invalid base64url characters or padding')
+        }
+
+        let compressed: Uint8Array
+        try {
+            compressed = base64urlToBytes(base64urlPart)
+        } catch (error) {
+            throw new MalformedValueError(`Failed to decode base64url: ${error.message}`)
+        }
 
         if (compressed.length < 4) {
-            throw new TypeError('Invalid gzip data: too short to contain ISIZE field')
+            throw new MalformedValueError('Invalid gzip data: too short to contain ISIZE field')
         }
 
         // Read ISIZE (last 4 bytes of gzip data, little-endian)
@@ -189,8 +230,6 @@ export class BitstreamStatusList {
             return buffer
         }
 
-        const paddedBuffer = new Uint8Array(MIN_BITSTRING_SIZE_BYTES)
-        paddedBuffer.set(buffer)
-        return paddedBuffer
+        return Uint8Array.from({length: MIN_BITSTRING_SIZE_BYTES}, (_, i) => buffer[i] || 0)
     }
 }

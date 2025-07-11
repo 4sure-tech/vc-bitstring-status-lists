@@ -1,4 +1,4 @@
-# vc-bitstring-status-lists# vc-bitstring-status-lists
+# vc-bitstring-status-lists
 
 A TypeScript library implementing the [W3C Bitstring Status List v1.0 specification](https://www.w3.org/TR/vc-bitstring-status-list/) for privacy-preserving credential status management in Verifiable Credentials.
 
@@ -12,16 +12,16 @@ Here's how it works conceptually: imagine you have 100,000 credentials. Rather t
 
 This library provides a complete implementation of the W3C specification with the following capabilities:
 
-- **Efficient bit manipulation** through the `BitManager` class, which handles the low-level operations of setting and getting status bits
+- **Direct credential access** through the `BitManager` class, which handles low-level bit operations without requiring explicit entry creation
 - **Compressed storage** using gzip compression and base64url encoding, meeting the W3C requirement for minimum 16KB bitstrings
-- **Multiple status support** beyond simple revocation/suspension, including custom status messages and multi-bit status values
+- **Uniform status width** where all credentials in a status list use the same number of bits for their status values
 - **Full W3C compliance** including proper validation, minimum bitstring sizes, and status purpose matching
 - **TypeScript support** with comprehensive type definitions for all specification interfaces
 
 ## Installation
 
 ```bash
-pnpm install vc-bitstring-status-lists (or npm / yarn)
+pnpm install @4sure-tech/vc-bitstring-status-lists # or npm / yarn
 ```
 
 ## Quick Start
@@ -31,35 +31,30 @@ Let's walk through creating and using a status list step by step:
 ### 1. Creating a Status List
 
 ```typescript
-import { StatusList, createStatusListCredential } from 'vc-bitstring-status-lists'
+import { BitstreamStatusList, createStatusListCredential } from 'vc-bitstring-status-lists'
 
-// Create a new status list
-const statusList = new StatusList()
+// Create a new status list with 1-bit status values (0 = valid, 1 = revoked)
+const statusList = new BitstreamStatusList({ statusSize: 1 })
 
-// Add credentials to track (each gets assigned a sequential index)
-statusList.addEntry(0) // First credential at index 0
-statusList.addEntry(1) // Second credential at index 1
-statusList.addEntry(2) // Third credential at index 2
-
-// Set some statuses (0 = valid, 1 = revoked for 'revocation' purpose)
-statusList.setStatus(0, 0) // Valid
-statusList.setStatus(1, 1) // Revoked
-statusList.setStatus(2, 0) // Valid
+// Set credential statuses directly using their indices
+statusList.setStatus(0, 0) // Credential at index 0 is valid
+statusList.setStatus(1, 1) // Credential at index 1 is revoked  
+statusList.setStatus(42, 1) // Credential at index 42 is revoked
 ```
-> ℹ️ - All new entries have status `0` – Valid by default
 
+The key insight here is that you don't need to "add" entries first. The system automatically handles any credential index you reference, creating the necessary bit positions as needed.
 
 ### 2. Publishing the Status List
 
 ```typescript
 // Create a verifiable credential containing the status list
-const statusListCredential = await createStatusListCredential({
-  list: statusList,
+const statusListCredential:BitstringStatusListCredentialUnsigned = await createStatusListCredential({
   id: 'https://example.com/status-lists/1',
   issuer: 'https://example.com/issuer',
   statusPurpose: 'revocation',
-  validFrom: '2024-01-01T00:00:00Z',
-  validUntil: '2024-12-31T23:59:59Z'
+  statusList: statusList, // Pass your configured status list
+  validFrom: new Date('2025-07-01'),
+  validUntil: new Date('2026-07-01')
 })
 
 // The credential now contains a compressed, encoded bitstring
@@ -86,7 +81,7 @@ const credential = {
   credentialStatus: {
     type: 'BitstringStatusListEntry',
     statusPurpose: 'revocation',
-    statusListIndex: '1', // This credential is at index 1
+    statusListIndex: '1', // This credential is at index 1 in the status list
     statusListCredential: 'https://example.com/status-lists/1'
   }
 }
@@ -111,17 +106,18 @@ console.log(result)
 The specification supports more than just binary states. You can use multiple bits per credential to represent complex status information:
 
 ```typescript
-const statusList = new StatusList()
+// Create a status list with 4 bits per credential (supports values 0-15)
+const statusList = new BitstreamStatusList({ statusSize: 4 })
 
-// Add credential with 4 bits of status information (supports values 0-15)
-statusList.addEntry(0, 4)
-
-// Set a complex status
+// Set complex status values
 statusList.setStatus(0, 12) // Binary: 1100, could represent multiple flags
+statusList.setStatus(1, 3)  // Binary: 0011, different status combination
 
-// Get the status
+// Retrieve the status
 const status = statusList.getStatus(0) // Returns: 12
 ```
+
+This approach is particularly useful when you need to track multiple aspects of a credential's status simultaneously, such as revocation status, verification level, and processing state.
 
 ### Status Messages
 
@@ -149,7 +145,7 @@ const credential = {
 A single status list can serve multiple purposes:
 
 ```typescript
-const statusListCredential = await createStatusListCredential({
+const statusListCredential:BitstringStatusListCredentialUnsigned = await createStatusListCredential({
   statusList: statusList,
   id: 'https://example.com/status-lists/1',
   issuer: 'https://example.com/issuer',
@@ -157,17 +153,40 @@ const statusListCredential = await createStatusListCredential({
 })
 ```
 
+### Working with Existing Status Lists
+
+You can decode and work with existing status lists:
+
+```typescript
+// Decode a status list from an encoded string
+const existingStatusList = await BitstreamStatusList.decode({
+  encodedList: 'u...', // The encoded bitstring from a credential
+  statusSize: 1
+})
+
+// Check or modify statuses
+console.log(existingStatusList.getStatus(42)) // Get status of credential 42
+existingStatusList.setStatus(100, 1) // Revoke credential 100
+
+// Re-encode for publishing
+const updatedEncoded = await existingStatusList.encode()
+```
+
 ## Understanding the Architecture
 
-The library is built around several key components that work together:
+The library is built around several key components that work together to provide a complete W3C-compliant implementation:
 
 ### BitManager Class
 
 The `BitManager` is the foundation that handles all low-level bit operations. It manages a growing buffer of bytes and provides methods to set and get multi-bit values at specific positions. Think of it as a specialized array where you can efficiently pack multiple small integers.
 
-### StatusList Class
+The key insight is that it calculates bit positions mathematically: credential index 42 with a 2-bit status size would occupy bits 84-85 in the bitstring. This eliminates the need for explicit entry management.
 
-The `StatusList` wraps the `BitManager` and adds the W3C-specific requirements like compression, encoding, and minimum size constraints. It ensures that the resulting bitstring meets the specification's 16KB minimum size requirement.
+### BitstreamStatusList Class
+
+The `BitstreamStatusList` wraps the `BitManager` and adds the W3C-specific requirements like compression, encoding, and minimum size constraints. It ensures that the resulting bitstring meets the specification's 16KB minimum size requirement.
+
+This class handles the complex process of GZIP compression and multibase encoding that the W3C specification requires, while providing a simple interface for credential status management.
 
 ### Verification Functions
 
@@ -175,30 +194,33 @@ The `checkStatus` function implements the complete verification algorithm, inclu
 
 ## W3C Compliance
 
-This library implements all requirements from the W3C Bitstring Status List v1.0 specification:
+This library implements all requirements from [the W3C Bitstring Status List v1.0 specification.](https://www.w3.org/TR/vc-bitstring-status-list):
 
 - **Minimum bitstring size**: All encoded status lists are padded to at least 16KB (131,072 bits)
 - **Compression**: Uses gzip compression as required by the specification
 - **Base64url encoding**: Proper encoding with the required "u" prefix
 - **Status purpose validation**: Ensures that credential entries match the status list's declared purposes
 - **Temporal validation**: Checks `validFrom` and `validUntil` dates on status list credentials
+- **Uniform status size**: All credentials in a status list use the same number of bits for their status
 
 ## API Reference
 
 ### Core Classes
 
-#### `StatusList`
+#### `BitstreamStatusList`
 
 The main class for creating and managing status lists.
 
 ```typescript
-class StatusList {
-  constructor(options?: { buffer?: Uint8Array; initialSize?: number })
-  addEntry(credentialIndex: number, statusSize?: number): void
+class BitstreamStatusList {
+  constructor(options?: { buffer?: Uint8Array; statusSize?: number; initialSize?: number })
   getStatus(credentialIndex: number): number
   setStatus(credentialIndex: number, status: number): void
+  getStatusSize(): number
+  getLength(): number
   encode(): Promise<string>
-  static decode(options: { encodedList: string }): Promise<{ buffer: Uint8Array }>
+  static decode(options: { encodedList: string; statusSize?: number }): Promise<BitstreamStatusList>
+  static getStatusListLength(encodedList: string, statusSize: number): number
 }
 ```
 
@@ -208,12 +230,12 @@ Low-level bit manipulation class (typically used internally).
 
 ```typescript
 class BitManager {
-  constructor(options: { buffer?: Uint8Array; initialSize?: number })
-  addEntry(credentialIndex: number, statusSize?: number): void
+  constructor(options: { statusSize?: number; buffer?: Uint8Array; initialSize?: number })
   getStatus(credentialIndex: number): number
   setStatus(credentialIndex: number, status: number): void
+  getStatusSize(): number
+  getBufferLength(): number
   toBuffer(): Uint8Array
-  getEntries(): Map<number, BitEntry>
 }
 ```
 
@@ -225,12 +247,13 @@ Creates a verifiable credential containing a status list.
 
 ```typescript
 function createStatusListCredential(options: {
-  list: StatusList
   id: string
   issuer: string | IIssuer
-  validFrom?: string
-  validUntil?: string
+  statusSize?: number
+  statusList?: BitstreamStatusList
   statusPurpose: string | string[]
+  validFrom?: Date
+  validUntil?: Date
   ttl?: number
 }): Promise<BitstringStatusListCredentialUnsigned>
 ```
