@@ -82,6 +82,7 @@ const credential = {
     type: 'BitstringStatusListEntry',
     statusPurpose: 'revocation',
     statusListIndex: '1', // This credential is at index 1 in the status list
+    statusSize: 1,
     statusListCredential: 'https://example.com/status-lists/1'
   }
 }
@@ -129,7 +130,8 @@ const credential = {
   credentialStatus: {
     type: 'BitstringStatusListEntry',
     statusPurpose: 'revocation',
-    statusListIndex: '0',
+    statusListIndex: '0', 
+    statusSize: 2, // Required to support status values up to 0x2 
     statusListCredential: 'https://example.com/status-lists/1',
     statusMessage: [
       { id: '0x0', message: 'Credential is valid' },
