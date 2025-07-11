@@ -53,8 +53,8 @@ const statusListCredential = await createStatusListCredential({
   issuer: 'https://example.com/issuer',
   statusPurpose: 'revocation',
   statusList: statusList, // Pass your configured status list
-  validFrom: new Date('2024-01-01'),
-  validUntil: new Date('2024-12-31')
+  validFrom: new Date('2025-07-01'),
+  validUntil: new Date('2026-07-01')
 })
 
 // The credential now contains a compressed, encoded bitstring
