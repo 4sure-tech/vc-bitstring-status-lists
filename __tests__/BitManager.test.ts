@@ -101,7 +101,7 @@ describe('BitManager', () => {
             const manager = new BitManager({statusSize: 8})
             manager.setStatus(0, 0b10101010)
             const buffer = manager.toBuffer()
-            expect(buffer[0]).toBe(0b01010101) // LSB-first mapping
+            expect(buffer[0]).toBe(0b10101010)
         })
     })
 })

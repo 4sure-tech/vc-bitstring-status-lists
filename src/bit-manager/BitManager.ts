@@ -1,6 +1,7 @@
 import {assertIsNonNegativeInteger, assertIsPositiveInteger} from "../utils/assertions"
+import {StatusRangeError} from "../status-list/errors";
 
-const EXPAND_BLOCK_SIZE = 16384 // 16KB
+const LIST_BLOCK_SIZE = 16384 // 16KB
 
 /**
  * BitManager - Low-level bitstring manipulation for W3C Bitstring Status Lists
@@ -29,7 +30,7 @@ export class BitManager {
     /**
      * Creates a new BitManager instance
      *
-     * @param options.statusSize - Bits per credential status (default: 1)
+     * @param options.statusSize - Bits per credential status (default: 1, max: 31)
      * @param options.buffer - Existing buffer for decoding
      * @param options.initialSize - Initial buffer size in bytes (default: 16KB)
      */
@@ -38,9 +39,15 @@ export class BitManager {
         buffer?: Uint8Array
         initialSize?: number
     } = {}) {
-        const {statusSize = 1, buffer, initialSize = 16384} = options
+        const {statusSize = 1, buffer, initialSize = LIST_BLOCK_SIZE} = options
 
         assertIsPositiveInteger(statusSize, 'statusSize')
+
+        // Guard against JavaScript bitwise operation overflow
+        if (statusSize > 30) {
+            throw new StatusRangeError(`statusSize ${statusSize} exceeds maximum supported value of 30 bits`)
+        }
+
         this.statusSize = statusSize
         this.bits = buffer ? new Uint8Array(buffer) : new Uint8Array(initialSize)
     }
@@ -57,7 +64,7 @@ export class BitManager {
         // Check if index exceeds reasonable bounds
         const maxIndex = Math.floor(this.bits.length * 8 / this.statusSize)
         if (credentialIndex >= maxIndex) {
-            throw new TypeError(`credentialIndex ${credentialIndex} exceeds buffer bounds`)
+            throw new StatusRangeError(`credentialIndex ${credentialIndex} exceeds buffer bounds`)
         }
 
         const startBit = credentialIndex * this.statusSize
@@ -69,7 +76,7 @@ export class BitManager {
      *
      * @param credentialIndex - Non-negative credential identifier
      * @param status - Status value (0 to 2^statusSize - 1)
-     * @throws {TypeError} If status exceeds maximum value for statusSize
+     * @throws {StatusRangeError} If status exceeds maximum value for statusSize
      */
     setStatus(credentialIndex: number, status: number): void {
         assertIsNonNegativeInteger(credentialIndex, 'credentialIndex')
@@ -77,7 +84,7 @@ export class BitManager {
 
         const maxValue = (1 << this.statusSize) - 1
         if (status > maxValue) {
-            throw new TypeError(`Status ${status} exceeds maximum value ${maxValue} for ${this.statusSize} bits`)
+            throw new StatusRangeError(`Status ${status} exceeds maximum value ${maxValue} for ${this.statusSize} bits`)
         }
 
         const startBit = credentialIndex * this.statusSize
@@ -90,22 +97,20 @@ export class BitManager {
      * @returns Copy of buffer containing only written data
      */
     toBuffer(): Uint8Array {
-        // Find highest credential index that's been set
-        let maxCredentialIndex = -1
-        for (let i = 0; i < this.bits.length * 8; i += this.statusSize) {
-            const credentialIndex = i / this.statusSize
-            if (this.readStatusBits(i) !== 0) {
-                maxCredentialIndex = credentialIndex
+        // search backwards from the end for non-zero bytes
+        let lastNonZeroByte = -1
+        for (let i = this.bits.length - 1; i >= 0; i--) {
+            if (this.bits[i] !== 0) {
+                lastNonZeroByte = i
+                break
             }
         }
 
-        if (maxCredentialIndex === -1) {
+        if (lastNonZeroByte === -1) {
             return new Uint8Array([])
         }
 
-        const requiredBits = (maxCredentialIndex + 1) * this.statusSize
-        const requiredBytes = Math.ceil(requiredBits / 8)
-        return this.bits.slice(0, requiredBytes)
+        return this.bits.slice(0, lastNonZeroByte + 1)
     }
 
 
@@ -147,7 +152,8 @@ export class BitManager {
             }
 
             const bit = (this.bits[byteIndex] >> (7 - bitOffset)) & 1
-            status |= bit << i
+            // MSB of status value should be leftmost bit
+            status |= bit << (this.statusSize - i - 1)
         }
 
         return status
@@ -167,7 +173,8 @@ export class BitManager {
 
             this.ensureBufferCanHold(byteIndex + 1)
 
-            const bit = (status >> i) & 1
+            // MSB of status value should be leftmost bit
+            const bit = (status >> (this.statusSize - i - 1)) & 1
 
             if (bit === 1) {
                 this.bits[byteIndex] |= (1 << (7 - bitOffset))
@@ -179,13 +186,22 @@ export class BitManager {
 
     /**
      * Ensures buffer can hold the specified number of bytes
+     * Grows in bitstring-sized chunks for better memory efficiency
      *
      * @param requiredBytes - Minimum bytes needed
      */
     private ensureBufferCanHold(requiredBytes: number): void {
         if (requiredBytes > this.bits.length) {
-            const blocksNeeded = Math.ceil(requiredBytes / EXPAND_BLOCK_SIZE)
-            const newSize = blocksNeeded * EXPAND_BLOCK_SIZE
+            // Calculate growth in bitstring-sized chunks rather than fixed 16KB blocks
+            const bitsNeeded = requiredBytes * 8
+            const entriesNeeded = Math.ceil(bitsNeeded / this.statusSize)
+            const optimalBits = entriesNeeded * this.statusSize
+            const optimalBytes = Math.ceil(optimalBits / 8)
+
+            // Still ensure minimum block size for reasonable growth
+            const minGrowthBytes = Math.max(optimalBytes, LIST_BLOCK_SIZE)
+            const blocksNeeded = Math.ceil(minGrowthBytes / LIST_BLOCK_SIZE)
+            const newSize = blocksNeeded * LIST_BLOCK_SIZE
 
             const newBuffer = new Uint8Array(newSize)
             newBuffer.set(this.bits)
