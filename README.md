@@ -48,7 +48,7 @@ The key insight here is that you don't need to "add" entries first. The system a
 
 ```typescript
 // Create a verifiable credential containing the status list
-const statusListCredential = await createStatusListCredential({
+const statusListCredential:BitstringStatusListCredentialUnsigned = await createStatusListCredential({
   id: 'https://example.com/status-lists/1',
   issuer: 'https://example.com/issuer',
   statusPurpose: 'revocation',
@@ -145,7 +145,7 @@ const credential = {
 A single status list can serve multiple purposes:
 
 ```typescript
-const statusListCredential = await createStatusListCredential({
+const statusListCredential:BitstringStatusListCredentialUnsigned = await createStatusListCredential({
   statusList: statusList,
   id: 'https://example.com/status-lists/1',
   issuer: 'https://example.com/issuer',
