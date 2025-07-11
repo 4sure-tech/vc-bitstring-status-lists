@@ -1,6 +1,6 @@
 {
   "name": "@4sure-tech/vc-bitstring-status-lists",
-  "version": "0.1.0",
+  "version": "0.1.0-unstable.1",
   "description": "TypeScript library for W3C Bitstring Status List v1.0 specification - privacy-preserving credential status management",
   "source": "src/index.ts",
   "type": "module",
