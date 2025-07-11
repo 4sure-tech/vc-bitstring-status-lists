@@ -52,6 +52,7 @@ const statusListCredential:BitstringStatusListCredentialUnsigned = await createS
   id: 'https://example.com/status-lists/1',
   issuer: 'https://example.com/issuer',
   statusPurpose: 'revocation',
+  statusSize: 1, // optional, 1 is default
   statusList: statusList, // Pass your configured status list
   validFrom: new Date('2025-07-01'),
   validUntil: new Date('2026-07-01')
