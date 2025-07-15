@@ -5,7 +5,7 @@ describe('BitManager', () => {
     let bitManager: BitManager
 
     beforeEach(() => {
-        bitManager = new BitManager({})
+        bitManager = new BitManager()
     })
 
     describe('constructor', () => {
@@ -43,7 +43,7 @@ describe('BitManager', () => {
         })
 
         it('should throw for negative credential index', () => {
-            expect(() => bitManager.getStatus(-1)).toThrow()
+            expect(() => bitManager.getStatus(-1)).toThrow('credentialIndex must be a non-negative integer')
         })
 
         it('should throw for index exceeding buffer bounds', () => {
@@ -64,11 +64,11 @@ describe('BitManager', () => {
         })
 
         it('should throw for negative credential index', () => {
-            expect(() => bitManager.setStatus(-1, 1)).toThrow()
+            expect(() => bitManager.setStatus(-1, 1)).toThrow('credentialIndex must be a non-negative integer')
         })
 
         it('should throw for negative status', () => {
-            expect(() => bitManager.setStatus(0, -1)).toThrow()
+            expect(() => bitManager.setStatus(0, -1)).toThrow('status must be a non-negative integer')
         })
 
         it('should throw for status exceeding bit size', () => {

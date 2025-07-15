@@ -210,7 +210,7 @@ const credential = {
         statusListIndex: "0",
         statusSize: 2, // Required for status values up to 0x2
         statusListCredential: "https://example.com/status-lists/1",
-        statusMessage: [
+        statusMessage: [ // "statusMessage MAY be present if statusSize is 1, and MUST be present if statusSize is greater than 1
             {id: "0x0", message: "Credential is valid"},
             {id: "0x1", message: "Credential has been revoked"},
             {id: "0x2", message: "Credential is under review"},

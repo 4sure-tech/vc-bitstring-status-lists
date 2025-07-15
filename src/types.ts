@@ -43,6 +43,12 @@ export interface IIssuer {
 
 export type CredentialStatus = BitstringStatusListEntry | BitstringStatusListEntry[]
 
+type CredentialSubject = {
+    id: string
+    type: string
+    [key: string]: any
+};
+
 export interface CredentialWithStatus {
     '@context': string[]
     id: string
@@ -51,11 +57,7 @@ export interface CredentialWithStatus {
     validFrom?: string
     validUntil?: string
     credentialStatus?: CredentialStatus
-    credentialSubject: {
-        id: string
-        type: string
-        [key: string]: any
-    }
+    credentialSubject: CredentialSubject
 }
 
 export interface CheckStatusOptions {

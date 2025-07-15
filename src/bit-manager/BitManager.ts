@@ -34,12 +34,12 @@ export class BitManager {
      * @param options.buffer - Existing buffer for decoding
      * @param options.initialSize - Initial buffer size in bytes (default: 16KB)
      */
-    constructor(options: {
+    constructor(options?: {
         statusSize?: number
         buffer?: Uint8Array
         initialSize?: number
-    } = {}) {
-        const {statusSize = 1, buffer, initialSize = LIST_BLOCK_SIZE} = options
+    }) {
+        const {statusSize = 1, buffer, initialSize = LIST_BLOCK_SIZE} = options ?? {};
 
         assertIsPositiveInteger(statusSize, 'statusSize')
 
