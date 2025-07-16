@@ -18,6 +18,8 @@ describe('StatusList', () => {
         it('should create with initial size', () => {
             const list = new BitstreamStatusList({initialSize: 2048})
             expect(list).toBeInstanceOf(BitstreamStatusList)
+            expect(list.getStatus((2048 * 8) -1 )).toBe(0)
+            expect(() => list.getStatus((2048 * 8))).toThrow('credentialIndex 16384 exceeds buffer bounds')
         })
 
         it('should create with buffer', () => {

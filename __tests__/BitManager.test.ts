@@ -17,6 +17,8 @@ describe('BitManager', () => {
         it('should create with custom initial size', () => {
             const manager = new BitManager({initialSize: 2048})
             expect(manager.toBuffer()).toBeInstanceOf(Uint8Array)
+            expect(manager.getStatus((2048 * 8) -1 )).toBe(0)
+            expect(() => manager.getStatus((2048 * 8))).toThrow('credentialIndex 16384 exceeds buffer bounds')
         })
 
         it('should create with existing buffer', () => {
