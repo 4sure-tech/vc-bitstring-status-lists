@@ -1,4 +1,3 @@
-// errors.ts
 export class BitstringStatusListError extends Error {
     public readonly type: string
     public readonly code: string
